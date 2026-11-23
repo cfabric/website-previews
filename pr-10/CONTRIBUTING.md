@@ -67,6 +67,6 @@ Any code merged into `main` is automatically published to **constructorfabric.or
 
 If you do not want to open a pull request yourself, you can report an issue instead:
 
-- **GitHub Issues** (preferred): open an issue at <https://github.com/constructorfabric/website/issues>. Anyone with a GitHub account can file one.
+- **GitHub Issues** (preferred): open an issue at <https://github.com/cfabric/website/issues>. Anyone with a GitHub account can file one.
 - **Discord**: if you do not have permission to open an issue, join our [Discord server](https://discord.gg/QWHtHGgEdq) and post in the **#website** channel.
 - **Email**: send a message to contact@constructorfabric.org.

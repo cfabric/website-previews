@@ -1,2 +1,2 @@
 # website-previews
-Generated temporary pull request previews for constructorfabric/website.
+Generated temporary pull request previews for cfabric/website.

@@ -15,7 +15,7 @@ If you only want to contribute, you can stop reading after the first section. Th
 5. When CI succeeds, the **`Publish Website Preview`** workflow will run and post a comment on your PR of the form:
    ```
    Preview deployment is ready:
-   https://constructorfabric.github.io/website-previews/pr-<YOUR_PR_NUMBER>/
+   https://cfabric.github.io/website-previews/pr-<YOUR_PR_NUMBER>/
    ```
 6. Click the preview URL and review your change there. Production (`constructorfabric.org`) is **not** affected by your PR.
 7. Push more commits as needed — each push re-runs CI and re-publishes the preview.
@@ -28,7 +28,7 @@ If you only want to contribute, you can stop reading after the first section. Th
 | Workflow | Trigger | Purpose |
 | --- | --- | --- |
 | `Website PR CI` | `pull_request` opened/synchronize/reopen | Builds the static site with a preview base path, verifies the base tag injection, and uploads the result as an artifact. **No write permissions, no secrets.** |
-| `Publish Website Preview` | `workflow_run` on `Website PR CI` (only when conclusion is `success`) | Downloads the artifact, checks out `constructorfabric/website-previews`, copies the artifact into `pr-<N>/`, commits, and pushes. Comments on your PR with the preview URL. |
+| `Publish Website Preview` | `workflow_run` on `Website PR CI` (only when conclusion is `success`) | Downloads the artifact, checks out `cfabric/website-previews`, copies the artifact into `pr-<N>/`, commits, and pushes. Comments on your PR with the preview URL. |
 | `Deploy Website Production` | `push` to `main` | Builds production with no base path override and deploys to GitHub Pages on `constructorfabric.org`. Does **not** run on PRs. |
 
 A failure in `Website PR CI` will block `Publish Website Preview`. A failure in `Publish Website Preview` does **not** block merging — but please ping a maintainer, since the preview URL is the primary review surface.
@@ -41,12 +41,12 @@ GitHub Actions comments the preview URL automatically as a single bot comment on
 
 ```
 Preview deployment is ready:
-https://constructorfabric.github.io/website-previews/pr-123/
+https://cfabric.github.io/website-previews/pr-123/
 ```
 
 The URL is also visible in the `Publish Website Preview` workflow run summary under the **`deploy`** step output.
 
-The preview is served by **GitHub Pages** on the `constructorfabric/website-previews` repository. There is no auth — anyone with the link can view it. Do not embed private data in previews.
+The preview is served by **GitHub Pages** on the `cfabric/website-previews` repository. There is no auth — anyone with the link can view it. Do not embed private data in previews.
 
 ---
 
@@ -67,7 +67,7 @@ For visual changes, take fresh screenshots in both desktop and mobile viewports 
 There are two reasons:
 
 1. **Origin separation.** Previews run contributor-controlled HTML and JavaScript. Hosting them under `constructorfabric.github.io` instead of `constructorfabric.org` means a malicious preview cannot read production cookies, set cookies on the production domain, or trick a logged-in user.
-2. **Privilege separation.** Only the low-privilege `Website PR CI` workflow touches the source repo. The privileged `Publish Website Preview` workflow uses a GitHub App installation token scoped **only** to `constructorfabric/website-previews`. There is no token in the source repo's secrets that can write to the source repo itself.
+2. **Privilege separation.** Only the low-privilege `Website PR CI` workflow touches the source repo. The privileged `Publish Website Preview` workflow uses a GitHub App installation token scoped **only** to `cfabric/website-previews`. There is no token in the source repo's secrets that can write to the source repo itself.
 
 The trade-off is that preview URLs are slightly less pretty. We accept this.
 
@@ -77,14 +77,14 @@ The trade-off is that preview URLs are slightly less pretty. We accept this.
 
 The following are configured **once**, by a repository administrator. Contributors do not need to touch any of this.
 
-### In `constructorfabric/website` (source repo)
+### In `cfabric/website` (source repo)
 
 **Repository variables** (Settings → Secrets and variables → Actions → Variables):
 
 | Name | Value |
 | --- | --- |
 | `AUTOMATION_APP_ID` | Numeric ID of the GitHub App (the existing "Constructor Fabric App" or a dedicated "Constructor Fabric Website Preview App"). |
-| `PREVIEW_REPOSITORY` | `constructorfabric/website-previews` |
+| `PREVIEW_REPOSITORY` | `cfabric/website-previews` |
 | `PREVIEW_RETENTION_DAYS` | `30` |
 
 **Repository secrets**:
@@ -93,7 +93,7 @@ The following are configured **once**, by a repository administrator. Contributo
 | --- | --- |
 | `AUTOMATION_APP_PRIVATE_KEY` | Private key downloaded from the GitHub App's settings page. |
 
-### In `constructorfabric/website-previews` (preview repo)
+### In `cfabric/website-previews` (preview repo)
 
 - GitHub Pages enabled, branch `main`, folder `/ (root)`.
 - GitHub App installed with `Contents: Read and write` (and `Metadata: Read`).
@@ -104,7 +104,7 @@ The following are configured **once**, by a repository administrator. Contributo
 Minimum required for preview publishing:
 
 - Repository permissions: **Contents: Read and write**, **Metadata: Read**
-- Installed only on `constructorfabric/website-previews`
+- Installed only on `cfabric/website-previews`
 - No organization-wide permissions
 
 If the existing "Constructor Fabric App" has broader scope or is installed on many repos, prefer creating a dedicated app for website previews. See `.dev/01_manual_operations_guide.md` in this repo for the full setup procedure.
@@ -121,7 +121,7 @@ Do **not** require `Publish Website Preview` or `Deploy Website Production` as a
 
 ## 7. How cleanup works
 
-A scheduled workflow in `constructorfabric/website-previews` (`.preview-repository/.github/workflows/cleanup-previews.yml`) runs **daily at 03:17 UTC**. It:
+A scheduled workflow in `cfabric/website-previews` (`.preview-repository/.github/workflows/cleanup-previews.yml`) runs **daily at 03:17 UTC**. It:
 
 1. Reads the `PREVIEW_RETENTION_DAYS` repository variable (default: `30`) from the preview repo.
 2. Iterates over every `pr-*` directory.
@@ -159,7 +159,7 @@ The cleanup can also be triggered manually with `workflow_dispatch`. You can ove
 The build script injects `<base href="/website-previews/pr-<N>/">` into every HTML file. If a new HTML file was added that does not contain a `<head>` tag, the injection is skipped. Confirm:
 
 ```bash
-curl -s https://constructorfabric.github.io/website-previews/pr-<N>/ | head
+curl -s https://cfabric.github.io/website-previews/pr-<N>/ | head
 ```
 
 You should see a `<base ...>` line right after `<head>`. If not, file an issue.
@@ -179,7 +179,7 @@ The retention period is configurable. You can either:
 - Push a new commit to the PR to re-deploy the preview.
 - Or, manually re-create the directory:
   ```bash
-  gh workflow run Publish\ Website\ Preview --repo constructorfabric/website
+  gh workflow run Publish\ Website\ Preview --repo cfabric/website
   # find the latest successful PR CI run for that PR, then re-trigger publish
   ```
   In practice, just pushing a commit is simpler.
